@@ -28,7 +28,7 @@ The Canduit constructor takes an optional `config` parameter, and a `callback(er
 
 The first argument of the callback function is an error (if present), and the second is the reference to the conduit client instance for convenience.
 
-The `**config**` object can take the following configuration parameters:
+The **`config`** object can take the following configuration parameters:
 
  - `configFile` - file to read the Arcanist configuration parameters. By default, phab reads `~/.arcrc` for host and authentication configuration.
 
