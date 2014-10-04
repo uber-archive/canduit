@@ -24,13 +24,13 @@ createCanduit(function (err, canduit) {
 
 #### `Canduit(config, callback)`
 
-The Canduit constructor takes an optional `config` parameter, and a `callback(error, conduit)` function. The callback fires after the canduit client instance have successfully authenticated with the server.
+The Canduit constructor takes an optional `config` parameter, and a `callback(error, conduit)` function. The callback fires after the canduit client instance has successfully authenticated with the server.
 
 The first argument of the callback function is an error (if present), and the second is the reference to the conduit client instance for convenience.
 
 The **`config`** object can take the following configuration parameters:
 
- - `configFile` - file to read the Arcanist configuration parameters. By default, phab reads `~/.arcrc` for host and authentication configuration.
+ - `configFile` - file to read the Arcanist configuration parameters. By default, canduit reads `~/.arcrc` for host and authentication configuration.
 
 You can also programmatically override the Conduit host and credentials:
 
@@ -38,11 +38,19 @@ You can also programmatically override the Conduit host and credentials:
  - `api` - conduit api root,
  - `cert` - conduit certificate
 
-#### `canduit.exec(route, params)`
+#### `canduit.exec(route, params, callback)`
 
 Call a [conduit API endpoint](https://secure.phabricator.com/book/phabdev/article/conduit/).
  - `route` is the name of the endpoint, and
  - `params` object contains the parameters to pass.
+ - `callback(error, result)` a callback function that fires when the conduit server responds. 
+
+  In case of client, server, or conduit-specific errors, the `error` parameter holds the Error instance, and the `result` is falsy. 
+  If the call suceeds, the `result` is set to an object containing response data.
+
+#### `canduit.authenticate(callback)`
+
+Re-authenticate the client with the server. Called internally by the constructor, but exposed in case you encounter an authentication timeout. 
 
 ## Contributing
 
