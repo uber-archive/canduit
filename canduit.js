@@ -14,7 +14,7 @@ function createCanduit (opts, cb) {
 }
 
 function Canduit (opts, cb) {
-  this.client = opts.client || 'duit';
+  this.client = opts.client || 'canduit';
   this.logger = opts.logger || {
     log: function silent () { }
   };
