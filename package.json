@@ -23,6 +23,7 @@
   },
   "homepage": "https://github.com/uber/canduit",
   "dependencies": {
+    "null-logtron": "^2.2.0",
     "request": "^2.44.0"
   },
   "devDependencies": {
