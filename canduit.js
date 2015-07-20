@@ -22,17 +22,26 @@ function Canduit (opts, cb) {
   self.api = opts.api;
   self.user = opts.user;
   self.cert = opts.cert;
-
-  self.configFile = opts.configFile ||
-    path.join(process.env.HOME, '.arcrc');
+  self.token = opts.token;
 
   if (!self.api) {
+    self.configFile = opts.configFile ||
+        path.join(process.env.HOME, '.arcrc');
     self.parseConfigFile(function (err) {
       if (err) return cb(err, null);
-      self.authenticate(cb);
+      if (self.cert) {
+        self.authenticate(cb);
+      } else {
+        cb(null, self);
+      }
+
     });
   } else {
-    self.authenticate(cb);
+    if (self.cert) {
+      self.authenticate(cb);
+    } else {
+      cb(null, self);
+    }
   }
 }
 
@@ -59,6 +68,7 @@ Canduit.prototype.parseConfigFile = function parseConfigFile (cb) {
       var host = Object.keys(arcrc.hosts)[0];
       self.user = arcrc.hosts[host].user;
       self.cert = arcrc.hosts[host].cert;
+      self.token = arcrc.hosts[host].token;
       self.api = host;
       cb(null);
     } catch (e) {
@@ -67,7 +77,17 @@ Canduit.prototype.parseConfigFile = function parseConfigFile (cb) {
   });
 };
 
-Canduit.prototype.exec = function exec (route, params, cb) {
+Canduit.prototype.exec = function exec(route, params, cb) {
+  var self = this;
+
+  if (!self.token) {
+    self.execSession(route, params, cb);
+  } else {
+    self.execToken(route, params, cb);
+  }
+}
+
+Canduit.prototype.execSession = function execSession(route, params, cb) {
   var self = this;
 
   if (self.session) {
@@ -103,9 +123,45 @@ Canduit.prototype.exec = function exec (route, params, cb) {
   });
 };
 
+Canduit.prototype.execToken = function execToken(route, params, cb) {
+  var self = this;
+  var qs = params || {};
+  qs['api.token'] = self.token;
+
+  var reqOptions = {
+    url: self.api + route,
+    qs: qs,
+    json: true
+  };
+  var req = request.get(reqOptions,
+      function getOptionsCallback(err, response, data) {
+        if (err) {
+          return cb(err, null);
+        }
+        if (response.statusCode >= 400) {
+          return cb(Canduit.serverError(response), null);
+        }
+        if (data.error_info) {
+          return cb(Canduit.conduitError(data), null);
+        }
+
+        self.logger.info('response from phabricator', {
+          href: req.href,
+          data: data
+        });
+
+        cb(null, data.result);
+      });
+
+  self.logger.info('request made to phabricator', {
+    url: self.api + route,
+    qs: qs,
+    json: true
+  });
+};
+
 Canduit.prototype.authenticate = function authenticate (cb) {
   var self = this;
-  if (!self.cert) return cb(null, self);
 
   var authToken = Date.now() / 1000;
   var authSignature = crypto
