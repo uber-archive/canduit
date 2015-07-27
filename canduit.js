@@ -6,15 +6,15 @@ var NullLogtron = require('null-logtron');
 
 module.exports = createCanduit;
 
-function createCanduit (opts, cb) {
+function createCanduit(opts, cb) {
   if (!cb) {
     cb = opts;
-    opts = { };
+    opts = {};
   }
   return new Canduit(opts, cb);
 }
 
-function Canduit (opts, cb) {
+function Canduit(opts, cb) {
   var self = this;
   self.client = opts.client || 'canduit';
   self.logger = opts.logger || NullLogtron();
@@ -26,7 +26,7 @@ function Canduit (opts, cb) {
 
   if (!self.api) {
     self.configFile = opts.configFile ||
-        path.join(process.env.HOME, '.arcrc');
+      path.join(process.env.HOME, '.arcrc');
     self.parseConfigFile(function (err) {
       if (err) return cb(err, null);
       if (self.cert) {
@@ -45,20 +45,20 @@ function Canduit (opts, cb) {
   }
 }
 
-Canduit.conduitError = function conduitError (data) {
+Canduit.conduitError = function conduitError(data) {
   var err = new Error(data.error_info);
   err.code = data.error_code;
   return err;
 };
 
-Canduit.serverError = function serverError (response) {
+Canduit.serverError = function serverError(response) {
   var err = new Error(response.body &&
     response.body.toString());
   err.code = response.statusCode;
   return err;
 };
 
-Canduit.prototype.parseConfigFile = function parseConfigFile (cb) {
+Canduit.prototype.parseConfigFile = function parseConfigFile(cb) {
   var self = this;
   fs.readFile(self.configFile, function (err, data) {
     if (err) return cb(err, null);
@@ -134,24 +134,24 @@ Canduit.prototype.execToken = function execToken(route, params, cb) {
     json: true
   };
   var req = request.get(reqOptions,
-      function getOptionsCallback(err, response, data) {
-        if (err) {
-          return cb(err, null);
-        }
-        if (response.statusCode >= 400) {
-          return cb(Canduit.serverError(response), null);
-        }
-        if (data.error_info) {
-          return cb(Canduit.conduitError(data), null);
-        }
+    function getOptionsCallback(err, response, data) {
+      if (err) {
+        return cb(err, null);
+      }
+      if (response.statusCode >= 400) {
+        return cb(Canduit.serverError(response), null);
+      }
+      if (data.error_info) {
+        return cb(Canduit.conduitError(data), null);
+      }
 
-        self.logger.info('response from phabricator', {
-          href: req.href,
-          data: data
-        });
-
-        cb(null, data.result);
+      self.logger.info('response from phabricator', {
+        href: req.href,
+        data: data
       });
+
+      cb(null, data.result);
+    });
 
   self.logger.info('request made to phabricator', {
     url: self.api + route,
@@ -160,7 +160,7 @@ Canduit.prototype.execToken = function execToken(route, params, cb) {
   });
 };
 
-Canduit.prototype.authenticate = function authenticate (cb) {
+Canduit.prototype.authenticate = function authenticate(cb) {
   var self = this;
 
   var authToken = Date.now() / 1000;
