@@ -93,34 +93,15 @@ Canduit.prototype.execSession = function execSession(route, params, cb) {
   if (self.session) {
     params.__conduit__ = self.session;
   }
-
-  var req = request.post(self.api + route, {
+  var reqOptions = {
+    url: self.api + route,
     json: true,
     form: {
       output: 'json',
       params: JSON.stringify(params)
     }
-  }, function (err, response, data) {
-    if (err) return cb(err, null);
-    if (response.statusCode >= 400) {
-      return cb(Canduit.serverError(response), null);
-    }
-    if (data.error_info) {
-      return cb(Canduit.conduitError(data), null);
-    }
-
-    self.logger.info('response from phabricator', {
-      href: req.href,
-      data: data
-    });
-
-    cb(null, data.result);
-  });
-
-  self.logger.info('post to phabricator', {
-    url: self.api + route,
-    json: true
-  });
+  };
+  self.makeReq('post', reqOptions, cb);
 };
 
 Canduit.prototype.execToken = function execToken(route, params, cb) {
@@ -133,7 +114,12 @@ Canduit.prototype.execToken = function execToken(route, params, cb) {
     qs: qs,
     json: true
   };
-  var req = request.get(reqOptions,
+  self.makeReq('get', reqOptions, cb);
+};
+
+Canduit.prototype.makeReq = function getOptionsCallback(type, reqOptions, cb) {
+  var self = this;
+  var req = request[type](reqOptions,
     function getOptionsCallback(err, response, data) {
       if (err) {
         return cb(err, null);
@@ -152,12 +138,7 @@ Canduit.prototype.execToken = function execToken(route, params, cb) {
 
       cb(null, data.result);
     });
-
-  self.logger.info('request made to phabricator', {
-    url: self.api + route,
-    qs: qs,
-    json: true
-  });
+  self.logger.info('request made to phabricator', reqOptions);
 };
 
 Canduit.prototype.authenticate = function authenticate(cb) {
