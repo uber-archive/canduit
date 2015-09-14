@@ -103,9 +103,8 @@ Canduit.prototype.requestWithCert = function requestWithCert (route, params, cb)
 
 Canduit.prototype.exec = function exec (route, params, cb) {
   var logger = this.logger;
-
   var request = this.token ? this.requestWithToken : this.requestWithCert;
-  var req = request.call(this, route, params, processResponse);
+  var req = request.call(this, route, params || {}, processResponse);
 
   function processResponse(error, response, data) {
     if (error) return cb(error, null);
