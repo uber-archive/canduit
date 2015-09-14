@@ -37,20 +37,21 @@ You can also programmatically override the Conduit host and credentials:
  - `user` - conduit username,
  - `api` - conduit api root,
  - `cert` - conduit certificate
+ - `token` - token obtined via arc `install-certificate`
 
 #### `canduit.exec(route, params, callback)`
 
 Call a [conduit API endpoint](https://secure.phabricator.com/book/phabdev/article/conduit/).
  - `route` is the name of the endpoint, and
  - `params` object contains the parameters to pass.
- - `callback(error, result)` a callback function that fires when the conduit server responds. 
+ - `callback(error, result)` a callback function that fires when the conduit server responds.
 
-  In case of client, server, or conduit-specific errors, the `error` parameter holds the Error instance, and the `result` is falsy. 
+  In case of client, server, or conduit-specific errors, the `error` parameter holds the Error instance, and the `result` is falsy.
   If the call suceeds, the `result` is set to an object containing response data.
 
 #### `canduit.authenticate(callback)`
 
-Re-authenticate the client with the server. Called internally by the constructor, but exposed in case you encounter an authentication timeout. 
+Re-authenticate the client with the server. Called internally by the constructor, but exposed in case you encounter an authentication timeout.
 
 ## Contributing
 
