@@ -60,6 +60,7 @@ Canduit.prototype.parseConfigFile = function parseConfigFile (cb) {
       var host = Object.keys(arcrc.hosts)[0];
       self.user = arcrc.hosts[host].user;
       self.cert = arcrc.hosts[host].cert;
+      self.token = arcrc.hosts[host].token;
       self.api = host;
       cb(null);
     } catch (e) {
@@ -68,9 +69,20 @@ Canduit.prototype.parseConfigFile = function parseConfigFile (cb) {
   });
 };
 
-Canduit.prototype.exec = function exec (route, params, cb) {
-  var logger = this.logger;
+Canduit.prototype.requestWithToken = function requestWithToken (route, params, cb) {
+  params['api.token'] = this.token;
 
+  var req = request.get(this.api + route, {
+    json: true,
+    qs: params,
+  }, cb);
+
+  this.logger.log('GET %s', this.api + route);
+
+  return req;
+};
+
+Canduit.prototype.requestWithCert = function requestWithCert (route, params, cb) {
   if (this.session) {
     params.__conduit__ = this.session;
   }
@@ -81,11 +93,31 @@ Canduit.prototype.exec = function exec (route, params, cb) {
       output: 'json',
       params: JSON.stringify(params)
     }
-  }, function (err, response, data) {
-    if (err) return cb(err, null);
+  }, cb);
+
+  this.logger.log('POST to %s with %s',
+    this.api + route, req.body.toString());
+
+  return req;
+};
+
+Canduit.prototype.exec = function exec (route, params, cb) {
+  var logger = this.logger;
+
+  var request = this.token ? this.requestWithToken : this.requestWithCert;
+  var req = request.call(this, route, params, processResponse);
+
+  function processResponse(error, response, data) {
+    if (error) return cb(error, null);
+
     if (response.statusCode >= 400) {
       return cb(Canduit.serverError(response), null);
     }
+
+    if (data.result) {
+      data = data.result;
+    }
+
     if (data.error_info) {
       return cb(Canduit.conduitError(data), null);
     }
@@ -93,15 +125,14 @@ Canduit.prototype.exec = function exec (route, params, cb) {
     logger.log('%s responded with %s',
       req.href, JSON.stringify(data));
 
-    cb(null, data.result);
-  });
+    cb(null, data);
+  }
 
-  logger.log('POST to %s with %s',
-    this.api + route, req.body.toString());
+  return req;
 };
 
 Canduit.prototype.authenticate = function authenticate (cb) {
-  if (!this.cert) return cb(null, this);
+  if (!this.cert || this.token) return cb(null, this);
 
   var authToken = Date.now() / 1000;
   var authSignature = crypto
