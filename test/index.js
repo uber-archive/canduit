@@ -56,6 +56,24 @@ function shouldCallBack(t) {
   };
 }
 
+function makeUserRequest(t) {
+  return function (err, canduit) {
+    t.error(err);
+    canduit.exec('user.query', {
+      usernames: ['aleksey']
+    }, shouldCallBack(t));
+  };
+}
+
+function makeErroneousRequest(t) {
+  return function (err, canduit) {
+    t.error(err);
+    canduit.exec('error', {
+      data: ['test']
+    }, shouldReportClientError(t));
+  };
+}
+
 test('creating canduit instance without parameters', function (t) {
   t.doesNotThrow(function () {
     createCanduit(function noop ( ) { });
@@ -101,12 +119,7 @@ test('requesting conduit api', function (t) {
 
   createCanduit({
     configFile: fixtures.configFile
-  }, function (err, canduit) {
-    t.error(err);
-    canduit.exec('user.query', {
-      usernames: ['aleksey']
-    }, shouldCallBack(t));
-  });
+  }, makeUserRequest(t));
 });
 
 test('requesting conduit api route that returns an error', function (t) {
@@ -117,12 +130,7 @@ test('requesting conduit api route that returns an error', function (t) {
 
   createCanduit({
     configFile: fixtures.configFile
-  }, function (err, canduit) {
-    t.error(err);
-    canduit.exec('error', {
-      data: ['test']
-    }, shouldReportClientError(t));
-  });
+  }, makeErroneousRequest(t));
 });
 
 test('requesting a non-existing route', function (t) {
@@ -155,12 +163,7 @@ test('requesting conduit api with token', function (t) {
 
   createCanduit({
     configFile: fixtures.tokenConfigFile
-  }, function (err, canduit) {
-    t.error(err);
-    canduit.exec('user.query', {
-      usernames: ['aleksey']
-    }, shouldCallBack(t));
-  });
+  }, makeUserRequest(t));
 });
 
 test('requesting conduit api with token', function (t) {
@@ -200,12 +203,7 @@ test('requesting conduit api route that returns an error with token', function (
 
   createCanduit({
     configFile: fixtures.tokenConfigFile
-  }, function (err, canduit) {
-    t.error(err);
-    canduit.exec('error', {
-      data: ['test']
-    }, shouldReportClientError(t));
-  });
+  }, makeErroneousRequest(t));
 });
 
 test('requesting a non-existing route with token', function (t) {
