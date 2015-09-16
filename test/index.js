@@ -4,6 +4,58 @@ var createCanduit = require('../');
 
 var fixtures = new Fixtures(test); 
 
+function shouldError(t) {
+  return function (err, canduit) {
+    t.ok(err, 'should call back with an error');
+    t.ok(!canduit, 'should not create a canduit instance');
+    t.end();
+  };
+}
+
+function shouldReportServerError(t) {
+  return function (err, result) {
+    t.ok(err, 'should call back with an error');
+    t.ok(err.code === 'ECONNREFUSED', 'should match the client error');
+    t.ok(!result, 'should not call back with data');
+    t.end();
+  };
+}
+
+function shouldReportClientError(t) {
+  return function (err, result) {
+    t.ok(err, 'should call back with a error');
+    t.ok(err.code === 400, 'should match the canduit error');
+    t.ok(!result, 'should not call back with data');
+    t.end();
+  };
+}
+
+function shouldReportNotFoundError(t) {
+  return function (err, result) {
+    t.ok(err, 'should call back with an error');
+    t.ok(err.code === 404, 'should match the server error');
+    t.ok(!result, 'should not call back with data');
+    t.end();
+  };
+}
+
+function shouldSucceed(t) {
+  return function (err, canduit) {
+    t.error(err);
+    t.ok(canduit, 'should create canduit instance');
+    t.ok(canduit.session, 'should record canduit session credentials');
+    t.end();
+  };
+}
+
+function shouldCallBack(t) {
+  return function (err, users) {
+    t.error(err);
+    t.ok(users, 'should call back with canduit API response');
+    t.end();
+  };
+}
+
 test('creating canduit instance without parameters', function (t) {
   t.doesNotThrow(function () {
     createCanduit(function noop ( ) { });
@@ -14,32 +66,19 @@ test('creating canduit instance without parameters', function (t) {
 test('authenticating with an unreadable config file', function (t) {
   createCanduit({
     configFile: 'not.there'
-  }, function (err, canduit) {
-    t.ok(err, 'should call back with an error');
-    t.ok(!canduit, 'should not create a canduit instance');
-    t.end();
-  });
+  }, shouldError(t));
 });
 
 test('authenticating with an malformed config file', function (t) {
   createCanduit({
     configFile: __filename
-  }, function (err, canduit) {
-    t.ok(err, 'should call back with an error');
-    t.ok(!canduit, 'should not create a canduit instance');
-    t.end();
-  });
+  }, shouldError(t));
 });
 
 test('authenticating with a .arcrc passed through an argument', function (t) {
   createCanduit({
     configFile: fixtures.configFile
-  }, function (err, canduit) {
-    t.error(err);
-    t.ok(canduit, 'should create canduit instance');
-    t.ok(canduit.session, 'should record canduit session credentials');
-    t.end();
-  });
+  }, shouldSucceed(t));
 });
 
 test('authenticating with passed config parameters', function (t) {
@@ -47,12 +86,7 @@ test('authenticating with passed config parameters', function (t) {
     user: 'user',
     cert: 'cert',
     api: 'http://localhost:' + fixtures.port + '/api/'
-  }, function (err, canduit) {
-    t.error(err);
-    t.ok(canduit, 'should create canduit instance');
-    t.ok(canduit.session, 'should record canduit session credentials');
-    t.end();
-  });
+  }, shouldSucceed(t));
 });
 
 test('requesting conduit api', function (t) {
@@ -71,11 +105,7 @@ test('requesting conduit api', function (t) {
     t.error(err);
     canduit.exec('user.query', {
       usernames: ['aleksey']
-    }, function (err, users) {
-      t.error(err);
-      t.ok(users, 'should call back with canduit API response');
-      t.end();
-    });
+    }, shouldCallBack(t));
   });
 });
 
@@ -91,12 +121,7 @@ test('requesting conduit api route that returns an error', function (t) {
     t.error(err);
     canduit.exec('error', {
       data: ['test']
-    }, function (err, result) {
-      t.ok(err, 'should call back with a error');
-      t.ok(err.code === 400, 'should match the canduit error');
-      t.ok(!result, 'should not call back with data');
-      t.end();
-    });
+    }, shouldReportClientError(t));
   });
 });
 
@@ -107,12 +132,7 @@ test('requesting a non-existing route', function (t) {
     t.error(err);
     canduit.exec('404', {
       data: ['test']
-    }, function (err, result) {
-      t.ok(err, 'should call back with an error');
-      t.ok(err.code === 404, 'should match the server error');
-      t.ok(!result, 'should not call back with data');
-      t.end();
-    });
+    }, shouldReportNotFoundError(t));
   });
 });
 
@@ -139,11 +159,7 @@ test('requesting conduit api with token', function (t) {
     t.error(err);
     canduit.exec('user.query', {
       usernames: ['aleksey']
-    }, function (err, users) {
-      t.error(err);
-      t.ok(users, 'should call back with canduit API response');
-      t.end();
-    });
+    }, shouldCallBack(t));
   });
 });
 
@@ -161,11 +177,7 @@ test('requesting conduit api with token', function (t) {
     configFile: fixtures.tokenConfigFile
   }, function (err, canduit) {
     t.error(err);
-    canduit.exec('user.query', null, function (err, users) {
-      t.error(err);
-      t.ok(users, 'should call back with canduit API response');
-      t.end();
-    });
+    canduit.exec('user.query', null, shouldCallBack(t));
   });
 });
 
@@ -176,15 +188,9 @@ test('attempting to request a non-existing api', function (t) {
     t.error(err);
     canduit.exec('404', {
       data: ['test']
-    }, function (err, result) {
-      t.ok(err, 'should call back with an error');
-      t.ok(err.code === 'ECONNREFUSED', 'should match the client error');
-      t.ok(!result, 'should not call back with data');
-      t.end();
-    });
+    }, shouldReportServerError(t));
   });
 });
-
 
 test('requesting conduit api route that returns an error with token', function (t) {
   fixtures.addFixture('/api/error', {
@@ -198,12 +204,7 @@ test('requesting conduit api route that returns an error with token', function (
     t.error(err);
     canduit.exec('error', {
       data: ['test']
-    }, function (err, result) {
-      t.ok(err, 'should call back with a error');
-      t.ok(err.code === 400, 'should match the canduit error');
-      t.ok(!result, 'should not call back with data');
-      t.end();
-    });
+    }, shouldReportClientError(t));
   });
 });
 
@@ -214,12 +215,7 @@ test('requesting a non-existing route with token', function (t) {
     t.error(err);
     canduit.exec('404', {
       data: ['test']
-    }, function (err, result) {
-      t.ok(err, 'should call back with an error');
-      t.ok(err.code === 404, 'should match the server error');
-      t.ok(!result, 'should not call back with data');
-      t.end();
-    });
+    }, shouldReportNotFoundError(t));
   });
 });
 
@@ -231,12 +227,7 @@ test('attempting to request a non-existing api with token', function (t) {
     t.error(err);
     canduit.exec('404', {
       data: ['test']
-    }, function (err, result) {
-      t.ok(err, 'should call back with an error');
-      t.ok(err.code === 'ECONNREFUSED', 'should match the client error');
-      t.ok(!result, 'should not call back with data');
-      t.end();
-    });
+    }, shouldReportServerError(t));
   });
 });
 

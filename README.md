@@ -1,4 +1,4 @@
-# canduit [![Build status](https://travis-ci.org/uber/canduit.png?branch=master)](https://travis-ci.org/uber/canduit)
+# canduit [![Build status](https://travis-ci.org/uber/canduit.png?branch=master)](https://travis-ci.org/uber/canduit) [![bitHound Score](https://www.bithound.io/github/uber/canduit/badges/score.svg)](https://www.bithound.io/github/uber/canduit)
 
 Node.js Phabricator Conduit API client.
 

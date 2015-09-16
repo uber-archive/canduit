@@ -1,6 +1,6 @@
 {
   "name": "canduit",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Node.js Phabricator Conduit API client",
   "main": "canduit.js",
   "scripts": {
@@ -28,10 +28,10 @@
   "devDependencies": {
     "fixed-server": "^0.4.0",
     "getport": "^0.1.0",
-    "istanbul": "^0.3.2",
+    "istanbul": "^0.3.20",
     "jshint": "^2.5.6",
     "run-parallel": "^1.0.0",
-    "tape": "^3.0.0",
-    "tmp": "0.0.24"
+    "tape": "^4.2.0",
+    "tmp": "^0.0.27"
   }
 }

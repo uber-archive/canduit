@@ -43,7 +43,7 @@ Fixtures.prototype.setup = function setup(t) {
     if (err) throw err;
 
     self.configFile = results.tmpName;
-    self.tokenConfigFile = results.tokenTmpName
+    self.tokenConfigFile = results.tokenTmpName;
     self.port = results.port;
 
     self.fixedServer = new FixedServer({
