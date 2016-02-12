@@ -22,6 +22,7 @@ function Canduit (opts, cb) {
   this.api = opts.api;
   this.user = opts.user;
   this.cert = opts.cert;
+  this.token = opts.token;
 
   this.configFile = opts.configFile ||
     path.join(process.env.HOME, '.arcrc');
