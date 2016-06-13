@@ -70,22 +70,11 @@ Canduit.prototype.parseConfigFile = function parseConfigFile (cb) {
   });
 };
 
-Canduit.prototype.requestWithToken = function requestWithToken (route, params, cb) {
-  params['api.token'] = this.token;
-
-  var req = request.get(this.api + route, {
-    json: true,
-    qs: params,
-  }, cb);
-
-  this.logger.log('GET %s', this.api + route);
-
-  return req;
-};
-
-Canduit.prototype.requestWithCert = function requestWithCert (route, params, cb) {
+Canduit.prototype.createRequest = function createRequest (route, params, cb) {
   if (this.session) {
     params.__conduit__ = this.session;
+  } else if (this.token) {
+    params.__conduit__ = { token: this.token };
   }
 
   var req = request.post(this.api + route, {
@@ -104,8 +93,7 @@ Canduit.prototype.requestWithCert = function requestWithCert (route, params, cb)
 
 Canduit.prototype.exec = function exec (route, params, cb) {
   var logger = this.logger;
-  var request = this.token ? this.requestWithToken : this.requestWithCert;
-  var req = request.call(this, route, params || {}, processResponse);
+  var req = this.createRequest(route, params || {}, processResponse);
 
   function processResponse(error, response, data) {
     if (error) return cb(error, null);

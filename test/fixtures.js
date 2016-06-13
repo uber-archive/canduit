@@ -24,7 +24,7 @@ Fixtures.prototype.addFixture = function addFixture(route, response, useToken) {
   self.fixtureNames.push(route);
 
   self.fixedServer.installFixture({
-    method: !useToken ? 'post' : 'get',
+    method: 'post',
     route: route,
     response: function(req, res) {
       res.json(response);
