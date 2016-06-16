@@ -86,7 +86,7 @@ Canduit.prototype.createRequest = function createRequest (route, params, cb) {
   }, cb);
 
   this.logger.log('POST to %s with %s',
-    this.api + route, req.body.toString());
+    this.api + route, (req.body || '').toString());
 
   return req;
 };
