@@ -38,7 +38,7 @@ Fixtures.prototype.teardown = function(test) {
   });
 };
 
-Fixtures.prototype.addFixture = function addFixture(route, response, useToken) {
+Fixtures.prototype.addFixture = function addFixture(route, response) {
   var self = this;
 
   self.fixtureNames.push(route);
