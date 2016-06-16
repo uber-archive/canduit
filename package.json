@@ -1,6 +1,6 @@
 {
   "name": "canduit",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "description": "Node.js Phabricator Conduit API client",
   "main": "canduit.js",
   "scripts": {
