@@ -81,6 +81,15 @@ test('creating canduit instance without parameters', function (t) {
   t.end();
 });
 
+test('authenticating when default config file cannot be found', function (t) {
+  var HOME = process.env.HOME;
+  delete process.env.HOME;
+  createCanduit(function (err, result) {
+    process.env.HOME = HOME;
+    shouldError(t)(err, result);
+  });
+});
+
 test('authenticating with an unreadable config file', function (t) {
   createCanduit({
     configFile: 'not.there'

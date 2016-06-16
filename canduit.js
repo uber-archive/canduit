@@ -24,8 +24,18 @@ function Canduit (opts, cb) {
   this.cert = opts.cert;
   this.token = opts.token;
 
-  this.configFile = opts.configFile ||
-    path.join(process.env.HOME, '.arcrc');
+  this.configFile = opts.configFile;
+  if (!this.configFile) {
+    if (process.env.HOME) {
+      this.configFile = path.join(process.env.HOME, '.arcrc');
+    } else {
+      var noHomeEnvError = new Error(
+        'Unable to find $HOME/.arcrc: ' +
+        '$HOME env variable is not defined.'
+      );
+      return cb(noHomeEnvError, null);
+    }
+  }
 
   var self = this;
   if (!this.api) {
