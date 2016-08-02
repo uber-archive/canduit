@@ -136,6 +136,19 @@ test('authenticating with passed config parameters', function (t) {
   }, shouldSucceed(t));
 });
 
+test('authenticating with passed config parameters and missing HOME env', function (t) {
+  var HOME = process.env.HOME;
+  delete process.env.HOME;
+  createCanduit({
+    user: 'user',
+    cert: 'cert',
+    api: 'http://localhost:' + fixtures.port + '/api/'
+  }, function (err, result) {
+    process.env.HOME = HOME;
+    shouldSucceed(t)(err, result);
+  });
+});
+
 test('requesting conduit api', function (t) {
   fixtures.addFixture('/api/user.query', {
     'result': [{
