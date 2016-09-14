@@ -12,7 +12,7 @@ var createCanduit = require('canduit');
 createCanduit(function (err, canduit) {
 
   // Execute a conduit API call
-  canduit.exec('user.query', {
+  canduit.exec('api/user.query', {
     usernames: ['aleksey']
   }, function (err, users) {
 
