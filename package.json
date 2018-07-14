@@ -24,7 +24,7 @@
   },
   "homepage": "https://github.com/uber/canduit",
   "dependencies": {
-    "request": "^2.79.0"
+    "request": "^2.87.0"
   },
   "devDependencies": {
     "fixed-server": "^0.4.0",
