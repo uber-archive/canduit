@@ -19,6 +19,7 @@
 // THE SOFTWARE.
 
 var test = require('tape');
+var sinon = require('sinon');
 var Fixtures = require('./fixtures');
 var createCanduit = require('../');
 
@@ -268,6 +269,94 @@ test('attempting to request a non-existing api with token', function (t) {
     canduit.exec('404', {
       data: ['test']
     }, shouldReportServerError(t));
+  });
+});
+
+test('make request with csrf token set initially', function (t) {
+  t.plan(5);
+  fixtures.installFixture({
+    method: 'post',
+    route: '/api/user.query-with-token',
+    response: function(req, res){
+      var response = {
+        'result': [{
+          'phid': 'PHID-USER-12345',
+          'userName': 'test',
+        }],
+        'error_code': null,
+        'error_info': null
+      };
+      t.ok(
+        req.headers['x-phabricator-csrf'],
+        'csrfToken set'
+      );
+      res.send(response);
+    }
+  }, true);
+
+  var csrfToken = 'some-csrf';
+  createCanduit({api: 'http://localhost:' + fixtures.port + '/api/', token: 'some-token', csrfToken: csrfToken}, function (err, canduit) {
+    var isCsrfTokenRequired = sinon.stub(canduit, 'isCsrfTokenRequired').returns(true);
+    t.equal(canduit.csrfToken, csrfToken, 'csrfToken set');
+    canduit.exec('user.query-with-token', {
+      usernames: ['aleksey']
+    }, function() {
+      t.ok(
+        isCsrfTokenRequired.calledOnce,
+        'isCsrfTokenRequired called'
+      );
+      isCsrfTokenRequired.restore();
+      shouldCallBack(t).apply(null, Array.prototype.slice.call(arguments));
+    });
+  });
+});
+
+test('make request with csrf token retrieved', function (t) {
+  t.plan(5);
+  var csrfToken = 'some-csrf-token';
+  fixtures.installFixture({
+    method: 'get',
+    route:'/login/refresh',
+    response: function (req, res) {
+      t.pass('csrf token endpoint should be called');
+      res.send('for (;;);{"error":null,"payload":{"token":'+'"'+csrfToken+'"'+'},"javelin_resources":["https:\\/\\/example.com\\/res\\/sourcegraph.js"]}');
+    }
+  });
+
+  // It's not possible to override endpoints, so create a new one
+  fixtures.installFixture({
+    method: 'post',
+    route: '/api/user.query-with-token-2',
+    response: function(req, res){
+      var response = {
+        'result': [{
+          'phid': 'PHID-USER-12345',
+          'userName': 'test',
+        }],
+        'error_code': null,
+        'error_info': null
+      };
+      t.equal(
+        req.headers['x-phabricator-csrf'],
+        csrfToken,
+        'csrfToken set'
+      );
+      res.send(response);
+    }
+  }, true);
+
+  createCanduit({api: 'http://localhost:' + fixtures.port + '/api/', token: 'some-token'}, function(err, canduit){
+    var isCsrfTokenRequired = sinon.stub(canduit, 'isCsrfTokenRequired').returns(true);
+    canduit.exec('user.query-with-token-2', {
+      usernames: ['aleksey']
+    }, function() {
+      t.ok(
+        isCsrfTokenRequired.calledOnce,
+        'isCsrfTokenRequired called'
+      );
+      isCsrfTokenRequired.restore();
+      shouldCallBack(t).apply(null, Array.prototype.slice.call(arguments));
+    });
   });
 });
 

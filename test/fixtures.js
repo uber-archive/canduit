@@ -52,6 +52,15 @@ Fixtures.prototype.addFixture = function addFixture(route, response) {
   });
 };
 
+Fixtures.prototype.installFixture = function installFixture() {
+  var self = this;
+
+  self.fixedServer.installFixture.apply(
+    self.fixedServer,
+    Array.prototype.slice.call(arguments)
+  );
+};
+
 Fixtures.prototype.setup = function setup(t) {
   var self = this;
 

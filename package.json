@@ -32,6 +32,7 @@
     "istanbul": "^0.4.5",
     "jshint": "^2.9.4",
     "run-parallel": "^1.1.6",
+    "sinon": "^2.4.1",
     "tape": "^4.6.3",
     "tmp": "^0.0.31",
     "uber-licence": "^2.0.2"

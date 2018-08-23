@@ -43,6 +43,7 @@ function Canduit (opts, cb) {
   this.user = opts.user;
   this.cert = opts.cert;
   this.token = opts.token;
+  this.csrfToken = opts.csrfToken;
 
   this.configFile = opts.configFile;
 
@@ -104,10 +105,15 @@ Canduit.prototype.createRequest = function createRequest (route, params, cb) {
   if (this.session) {
     params.__conduit__ = this.session;
   } else if (this.token) {
-    params.__conduit__ = { token: this.token };
+    params.__conduit__ = {token: this.token};
+  }
+  var headers = {};
+  if (this.csrfToken) {
+    headers = {'X-Phabricator-Csrf': this.csrfToken};
   }
 
   var req = request.post(this.api + route, {
+    headers: headers,
     json: true,
     form: {
       output: 'json',
@@ -121,9 +127,54 @@ Canduit.prototype.createRequest = function createRequest (route, params, cb) {
   return req;
 };
 
-Canduit.prototype.exec = function exec (route, params, cb) {
+/**
+ * Changes https://your-phabricator.url/api/
+ * to https://your-phabricator.url;
+ */
+Canduit.prototype.getBaseUrl = function () {
+  return this.api.replace(/\/?api\/?/, '');
+};
+
+/**
+ * Get a CSRF Token in the browser
+ * Code is adapted from https://secure.phabricator.com/P2028
+ */
+Canduit.prototype.getCsrfToken = function (cb) {
+  var self = this;
+  if (!self.isCsrfTokenRequired() || self.csrfToken) {
+    return cb();
+  }
+  var baseUrl = this.getBaseUrl();
+  var req = request.get(baseUrl + '/login/refresh/', function (error, response) {
+    // Get JSON text from text response
+    var matchGroups = response.body.match(/{.*}/) || [];
+    var json = matchGroups[0];
+    try {
+      var responseJSON = JSON.parse(json);
+      self.csrfToken = responseJSON.payload.token;
+      if (cb) {
+        return cb();
+      }
+    } catch (e) {
+      self.logger.log('Unable to parse JSON: %s %s',
+        e.message, response.body);
+    }
+  });
+  return req;
+};
+
+/**
+ * CSRF Token is required in browser requests
+ */
+Canduit.prototype.isCsrfTokenRequired = function () {
+  return typeof window !== 'undefined';
+};
+
+Canduit.prototype.exec = function exec(route, params, cb) {
   var logger = this.logger;
-  var req = this.createRequest(route, params || {}, processResponse);
+  var req = this.getCsrfToken(
+    this.createRequest.bind(this, route, params || {}, processResponse)
+  );
 
   function processResponse(error, response, data) {
     if (error) return cb(error, null);
