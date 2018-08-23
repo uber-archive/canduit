@@ -117,8 +117,7 @@ Canduit.prototype.createRequest = function createRequest(route, params, cb) {
     json: true,
     form: {
       output: 'json',
-      params: JSON.stringify(params),
-      'api.token': this.token
+      params: JSON.stringify(params)
     }
   }, cb);
 
