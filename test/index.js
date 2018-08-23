@@ -19,6 +19,7 @@
 // THE SOFTWARE.
 
 var test = require('tape');
+var sinon = require('sinon');
 var Fixtures = require('./fixtures');
 var createCanduit = require('../');
 
@@ -268,6 +269,68 @@ test('attempting to request a non-existing api with token', function (t) {
     canduit.exec('404', {
       data: ['test']
     }, shouldReportServerError(t));
+  });
+});
+
+test('create canduit instance with csrf token', function (t) {
+  t.plan(2);
+  var csrfToken = 'some-csrf';
+  t.doesNotThrow(function () {
+    createCanduit({api: 'somelink', token: 'some-token', csrfToken: csrfToken}, function (err, canduit) {
+      t.equal(canduit.csrfToken, csrfToken, 'csrfToken set');
+    });
+  }, 'should not throw an error');
+  t.end();
+});
+
+test('make request with csrf token', function (t) {
+  t.plan(6);
+
+  var csrfToken = 'some-csrf-token';
+  var response = {
+    'result': [{
+      'phid': 'PHID-USER-12345',
+      'userName': 'test',
+    }],
+    'error_code': null,
+    'error_info': null
+  };
+
+  fixtures.installFixture({
+    method: 'post',
+    route: '/api/user.query-with-token',
+    response: function(req, res){
+      t.equal(
+        req.headers['x-phabricator-csrf'],
+        csrfToken,
+        'csrfToken set'
+      );
+      res.send(response);
+    }
+  }, true);
+
+  fixtures.installFixture({
+    method: 'get',
+    route:'/login/refresh',
+    response: function (req, res) {
+      t.pass('csrf token endpoint should be called');
+      res.send('for (;;);{"error":null,"payload":{"token":'+'"'+csrfToken+'"'+'},"javelin_resources":["https:\\/\\/example.com\\/res\\/sourcegraph.js"]}');
+    }
+  });
+
+  createCanduit({api: 'http://localhost:' + fixtures.port + '/api/', token: 'some-token'}, function(err, canduit){
+    var isCsrfTokenRequired = sinon.stub(canduit, 'isCsrfTokenRequired').returns(true);
+    t.error(err, 'no error creating conduit');
+    canduit.exec('user.query-with-token', {
+      usernames: ['aleksey']
+    }, function() {
+      t.ok(
+        isCsrfTokenRequired.calledOnce,
+        'isCsrfTokenRequired called'
+      );
+      isCsrfTokenRequired.restore();
+      shouldCallBack(t).apply(null, Array.prototype.slice.call(arguments));
+    });
   });
 });
 
