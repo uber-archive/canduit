@@ -141,7 +141,7 @@ Canduit.prototype.getBaseUrl = function () {
  */
 Canduit.prototype.getCsrfToken = function (cb) {
   var self = this;
-  if (!this.isCsrfTokenRequired()) {
+  if (!self.isCsrfTokenRequired() || self.csrfToken) {
     return cb();
   }
   var baseUrl = this.getBaseUrl();
@@ -156,7 +156,7 @@ Canduit.prototype.getCsrfToken = function (cb) {
         return cb();
       }
     } catch (e) {
-      this.logger.log('Unable to parse JSON: %s %s',
+      self.logger.log('Unable to parse JSON: %s %s',
         e.message, response.body);
     }
   });
