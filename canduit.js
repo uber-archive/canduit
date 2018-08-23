@@ -25,19 +25,18 @@ var request = require('request');
 
 module.exports = createCanduit;
 
-function createCanduit(opts, cb) {
+function createCanduit (opts, cb) {
   if (!cb) {
     cb = opts;
-    opts = {};
+    opts = { };
   }
   return new Canduit(opts, cb);
 }
 
-function Canduit(opts, cb) {
+function Canduit (opts, cb) {
   this.client = opts.client || 'canduit';
   this.logger = opts.logger || {
-    log: function silent() {
-    }
+    log: function silent () { }
   };
 
   this.api = opts.api;
@@ -70,20 +69,20 @@ function Canduit(opts, cb) {
   }
 }
 
-Canduit.conduitError = function conduitError(data) {
+Canduit.conduitError = function conduitError (data) {
   var err = new Error(data.error_info);
   err.code = data.error_code;
   return err;
 };
 
-Canduit.serverError = function serverError(response) {
+Canduit.serverError = function serverError (response) {
   var err = new Error(response.body &&
     response.body.toString());
   err.code = response.statusCode;
   return err;
 };
 
-Canduit.prototype.parseConfigFile = function parseConfigFile(cb) {
+Canduit.prototype.parseConfigFile = function parseConfigFile (cb) {
   var self = this;
   fs.readFile(this.configFile, function (err, data) {
     if (err) return cb(err, null);
@@ -102,7 +101,7 @@ Canduit.prototype.parseConfigFile = function parseConfigFile(cb) {
   });
 };
 
-Canduit.prototype.createRequest = function createRequest(route, params, cb) {
+Canduit.prototype.createRequest = function createRequest (route, params, cb) {
   if (this.session) {
     params.__conduit__ = this.session;
   } else if (this.token) {
@@ -112,6 +111,7 @@ Canduit.prototype.createRequest = function createRequest(route, params, cb) {
   if (this.csrfToken) {
     headers = {'X-Phabricator-Csrf': this.csrfToken};
   }
+
   var req = request.post(this.api + route, {
     headers: headers,
     json: true,
@@ -200,7 +200,7 @@ Canduit.prototype.exec = function exec(route, params, cb) {
   return req;
 };
 
-Canduit.prototype.authenticate = function authenticate(cb) {
+Canduit.prototype.authenticate = function authenticate (cb) {
   if (!this.cert || this.token) return cb(null, this);
 
   var authToken = Date.now() / 1000;
@@ -217,7 +217,6 @@ Canduit.prototype.authenticate = function authenticate(cb) {
     authToken: authToken,
     authSignature: authSignature
   }, function (err, result) {
-    debugger;
     if (err) return cb(err, null);
     self.session = result;
     return cb(null, self);
