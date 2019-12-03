@@ -1,6 +1,8 @@
 # canduit 
 [![Build status](https://travis-ci.org/uber/canduit.png?branch=master)](https://travis-ci.org/uber/canduit) [![bitHound Score](https://www.bithound.io/github/uber/canduit/badges/score.svg)](https://www.bithound.io/github/uber/canduit) [![bitHound Dependencies](https://www.bithound.io/github/uber/canduit/badges/dependencies.svg)](https://www.bithound.io/github/uber/canduit/master/dependencies/npm) [![bitHound Dev Dependencies](https://www.bithound.io/github/uber/canduit/badges/devDependencies.svg)](https://www.bithound.io/github/uber/canduit/master/dependencies/npm)
 
+(This project is deprecated and not maintained.)
+
 Node.js Phabricator Conduit API client.
 
 ## Getting Started
